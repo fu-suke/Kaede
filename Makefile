@@ -5,10 +5,6 @@ kaede: kaede.c
 test: kaede
 	./test.sh
 
-assemble:
-	cc -o tmp tmp.s
-	./tmp
-
 clean:
 	rm -f kaede *.o *~ tmp*
 

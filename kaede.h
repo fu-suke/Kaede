@@ -66,5 +66,9 @@ struct Node
     int val;       // Used if kind == ND_NUM
 };
 
-
 Node *expr();
+//
+// Code generator
+//
+
+void gen(Node *node);

@@ -1,7 +1,5 @@
 #include "kaede.h"
 
-void gen(Node *node);
-
 void gen(Node *node)
 {
     if (node->kind == ND_NUM)

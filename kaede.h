@@ -67,8 +67,6 @@ struct Node
 };
 
 Node *expr();
-//
-// Code generator
-//
 
+// Code generator
 void gen(Node *node);

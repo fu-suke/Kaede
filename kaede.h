@@ -65,3 +65,6 @@ struct Node
     Node *rhs;     // Right-hand side
     int val;       // Used if kind == ND_NUM
 };
+
+
+Node *expr();

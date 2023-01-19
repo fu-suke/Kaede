@@ -9,17 +9,16 @@
 // Tokenizer
 //
 
-typedef enum
-{
+typedef enum {
     TK_RESERVED, // Keywords or punctuators
+    TK_IDENT,    // Identifier
     TK_NUM,      // Integer literals
     TK_EOF,      // End-of-file markers
 } TokenKind;
 
 // Token type
 typedef struct Token Token;
-struct Token
-{
+struct Token {
     TokenKind kind; // Token kind
     Token *next;    // Next token
     int val;        // If kind is TK_NUM, its value
@@ -29,6 +28,7 @@ struct Token
 
 // Input program
 extern char *user_input;
+
 
 // Current token
 extern Token *token;
@@ -43,30 +43,34 @@ Token *tokenize();
 // Parser
 //
 
-typedef enum
-{
-    ND_ADD, // +
-    ND_SUB, // -
-    ND_MUL, // *
-    ND_DIV, // /
-    ND_EQ,  // ==
-    ND_NE,  // !=
-    ND_LT,  // <
-    ND_LE,  // <=
-    ND_NUM, // Integer
+typedef enum {
+    ND_ADD,    // +
+    ND_SUB,    // -
+    ND_MUL,    // *
+    ND_DIV,    // /
+    ND_EQ,     // ==
+    ND_NE,     // !=
+    ND_LT,     // <
+    ND_LE,     // <=
+    ND_NUM,    // Integer
+    ND_ASSIGN, // =
+    ND_LVAR,   // ローカル変数
 } NodeKind;
 
 // AST node type
 typedef struct Node Node;
-struct Node
-{
+struct Node {
     NodeKind kind; // Node kind
     Node *lhs;     // Left-hand side
     Node *rhs;     // Right-hand side
-    int val;       // Used if kind == ND_NUM
+    int val;       // kindがND_NUMの場合のみ使う
+    int offset;    // kindがND_LVARの場合のみ使う
 };
 
 Node *expr();
 
 // Code generator
 void gen(Node *node);
+
+extern Node *code[];
+void program();

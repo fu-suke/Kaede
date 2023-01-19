@@ -47,6 +47,6 @@ assert '1>=1;' 1
 assert '1>=2;' 0
 
 
-assert "a=2;b=3;a+b;" 5;
+assert "a=2;b=3;a+b;" 5
 
 echo OK

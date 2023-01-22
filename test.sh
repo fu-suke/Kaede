@@ -48,5 +48,5 @@ assert '1>=2;' 0
 
 
 assert "a=2;b=3;a+b;" 5
-
+assert "hoge=2;honi=3;hoge+honi;" 5
 echo OK

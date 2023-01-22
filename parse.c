@@ -1,10 +1,11 @@
 #include "kaede.h"
 
 Token *token;
+// ローカル変数
+LVar *locals;
 
 // Consumes the current token if it matches `op`.
-bool consume(char *op)
-{
+bool consume(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
         return false;
@@ -13,8 +14,7 @@ bool consume(char *op)
 }
 
 // Ensure that the current token is `op`.
-void expect(char *op)
-{
+void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
         error_at(token->str, "expected \"%s\"", op);
@@ -22,8 +22,7 @@ void expect(char *op)
 }
 
 // Ensure that the current token is TK_NUM.
-int expect_number()
-{
+int expect_number() {
     if (token->kind != TK_NUM)
         error_at(token->str, "expected a number");
     int val = token->val;
@@ -33,23 +32,20 @@ int expect_number()
 
 bool at_eof() { return token->kind == TK_EOF; }
 
-Node *new_node(NodeKind kind)
-{
+Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
     return node;
 }
 
-Node *new_binary(NodeKind kind, Node *lhs, Node *rhs)
-{
+Node *new_binary(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = new_node(kind);
     node->lhs = lhs;
     node->rhs = rhs;
     return node;
 }
 
-Node *new_num(int val)
-{
+Node *new_num(int val) {
     Node *node = new_node(ND_NUM);
     node->val = val;
     return node;
@@ -65,11 +61,9 @@ Node *unary();
 Node *primary();
 
 // program    = stmt*
-void program()
-{
+void program() {
     int i = 0;
-    while (!at_eof())
-    {
+    while (!at_eof()) {
         code[i++] = stmt();
     }
 
@@ -77,8 +71,7 @@ void program()
 }
 
 // stmt = expr ';'
-Node *stmt()
-{
+Node *stmt() {
     Node *node = expr();
     expect(";");
     return node;
@@ -88,8 +81,7 @@ Node *stmt()
 Node *expr() { return assign(); }
 
 // equality ("=" assign)?
-Node *assign()
-{
+Node *assign() {
     Node *node = equality();
     if (consume("="))
         node = new_binary(ND_ASSIGN, node, assign());
@@ -97,12 +89,10 @@ Node *assign()
 }
 
 // equality = relational ("==" relational | "!=" relational)*
-Node *equality()
-{
+Node *equality() {
     Node *node = relational();
 
-    for (;;)
-    {
+    for (;;) {
         if (consume("=="))
             node = new_binary(ND_EQ, node, relational());
         else if (consume("!="))
@@ -113,12 +103,10 @@ Node *equality()
 }
 
 // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
-Node *relational()
-{
+Node *relational() {
     Node *node = add();
 
-    for (;;)
-    {
+    for (;;) {
         if (consume("<"))
             node = new_binary(ND_LT, node, add());
         else if (consume("<="))
@@ -133,12 +121,10 @@ Node *relational()
 }
 
 // add = mul ("+" mul | "-" mul)*
-Node *add()
-{
+Node *add() {
     Node *node = mul();
 
-    for (;;)
-    {
+    for (;;) {
         if (consume("+"))
             node = new_binary(ND_ADD, node, mul());
         else if (consume("-"))
@@ -149,12 +135,10 @@ Node *add()
 }
 
 // mul = unary ("*" unary | "/" unary)*
-Node *mul()
-{
+Node *mul() {
     Node *node = unary();
 
-    for (;;)
-    {
+    for (;;) {
         if (consume("*"))
             node = new_binary(ND_MUL, node, unary());
         else if (consume("/"))
@@ -166,8 +150,7 @@ Node *mul()
 
 // unary = ("+" | "-")? unary
 //       | primary
-Node *unary()
-{
+Node *unary() {
     if (consume("+"))
         return unary();
     if (consume("-"))
@@ -176,34 +159,47 @@ Node *unary()
 }
 
 //
-Token *consume_ident()
-{
+Token *consume_ident() {
     if (token->kind != TK_IDENT)
         return NULL;
-    else
-    {
+    else {
         Token *tmp = token;
         token = token->next;
         return tmp;
     }
 };
 
+LVar *find_lvar(Token *tok) {
+    for (LVar *var = locals; var; var = var->next)
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    return NULL;
+}
+
 // num | ident | "(" expr ")"
-Node *primary()
-{
-    if (consume("("))
-    {
+Node *primary() {
+    if (consume("(")) {
         Node *node = expr();
         expect(")");
         return node;
     }
-
     Token *tok = consume_ident();
-    if (tok)
-    {
+    if (tok) {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->offset = (tok->str[0] - 'a' + 1) * 8; // a からの距離
+
+        LVar *lvar = find_lvar(tok);
+        if (lvar) {
+            node->offset = lvar->offset;
+        } else {
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = locals->offset + 8;
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
 

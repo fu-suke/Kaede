@@ -1,8 +1,8 @@
 #include "kaede.h"
 
-void display_token(Token *token){
+void display_token(Token *token) {
     printf("token is \n");
-    while(token->kind != TK_EOF){
+    while (token->kind != TK_EOF) {
         printf("%s  ", token->str);
         printf("%d\n", token->kind);
         token = token->next;
@@ -23,19 +23,28 @@ int main(int argc, char **argv) {
 
     token = tokenize();
     // display_token(token);
+    locals = calloc(1, sizeof(LVar));
+    locals->next = NULL;
     program();
-    //printf("hogehoge\n");
+
+    int locals_len = -1;
+    while (locals != NULL) {
+        locals_len++;
+        locals = locals->next;
+    }
 
     // アセンブリの前半部分を出力
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
 
-    // プロローグ
-    // 変数26個分の領域を確保する
+    // // プロローグ
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n");
+
+    // 変数個分の領域を確保する
+    int mem = locals_len * 8;
+    printf("  sub rsp, %d\n", mem);
 
     // 先頭の式から順にコード生成
     for (int i = 0; code[i]; i++) {
@@ -51,5 +60,6 @@ int main(int argc, char **argv) {
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");
+    free(locals);
     return 0;
 }

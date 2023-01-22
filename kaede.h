@@ -29,7 +29,6 @@ struct Token {
 // Input program
 extern char *user_input;
 
-
 // Current token
 extern Token *token;
 
@@ -68,6 +67,18 @@ struct Node {
 };
 
 Node *expr();
+
+typedef struct LVar LVar;
+
+// ローカル変数の型
+struct LVar {
+    LVar *next; // 次の変数かNULL
+    char *name; // 変数の名前
+    int len;    // 名前の長さ
+    int offset; // RBPからのオフセット
+};
+
+extern LVar *locals;
 
 // Code generator
 void gen(Node *node);

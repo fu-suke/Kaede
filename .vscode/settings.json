@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "kaede.h": "c"
+        "kaede.h": "c",
+        "system_error": "c"
     },
     "C_Cpp.clang_format_style": "{ BreakBeforeBraces: Attach, IndentWidth: 4 }"
 }

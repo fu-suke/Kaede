@@ -37,13 +37,17 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
 
 bool startswith(char *p, char *q) { return memcmp(p, q, strlen(q)) == 0; }
 
+bool is_alnum(char c) {
+    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
+           ('0' <= c && c <= '9') || (c == '_');
+}
+
 // Tokenize `user_input` and returns new tokens.
 Token *tokenize() {
     char *p = user_input;
     Token head;
     head.next = NULL;
     Token *cur = &head;
-
     while (*p) {
         // Skip whitespace characters.
         if (isspace(*p)) {
@@ -64,15 +68,19 @@ Token *tokenize() {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
-
+        // returnをトークン化
+        if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
+            cur = new_token(TK_RETURN, cur, p, 6);
+            p += 6;
+            continue;
+        }
         // 変数の1文字目は [a-zA-Z_]
         if (('a' <= *p && *p <= 'z') || *p == '_' || ('A' <= *p && *p <= 'Z')) {
             int var_len = 1;
             p++;
             // printf("hoge\n");
             // ２文字目以降は数字も許す
-            while (('a' <= *p && *p <= 'z') || *p == '_' ||
-                   ('A' <= *p && *p <= 'Z') || ('0' <= *p && *p <= '9')) {
+            while (is_alnum(p[0])) {
                 p++;
                 var_len++;
             }

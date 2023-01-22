@@ -19,8 +19,6 @@ int main(int argc, char **argv) {
     // トークナイズしてパースする
     // 結果はcodeに保存される
     user_input = argv[1];
-    // printf("user_input is %s\n", user_input);
-
     token = tokenize();
     // display_token(token);
     locals = calloc(1, sizeof(LVar));

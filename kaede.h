@@ -14,6 +14,7 @@ typedef enum {
     TK_IDENT,    // Identifier
     TK_NUM,      // Integer literals
     TK_EOF,      // End-of-file markers
+    TK_RETURN,   // return
 } TokenKind;
 
 // Token type
@@ -54,6 +55,7 @@ typedef enum {
     ND_NUM,    // Integer
     ND_ASSIGN, // =
     ND_LVAR,   // ローカル変数
+    ND_RETURN, // return
 } NodeKind;
 
 // AST node type

@@ -6,8 +6,8 @@ LVar *locals;
 
 // Consumes the current token if it matches `op`.
 bool consume(char *op) {
-    if (token->kind != TK_RESERVED || strlen(op) != token->len ||
-        memcmp(token->str, op, token->len))
+    if ((token->kind != TK_RESERVED && token->kind != TK_RETURN) ||
+        strlen(op) != token->len || memcmp(token->str, op, token->len))
         return false;
     token = token->next;
     return true;
@@ -72,8 +72,17 @@ void program() {
 
 // stmt = expr ';'
 Node *stmt() {
-    Node *node = expr();
-    expect(";");
+    Node *node;
+    if (consume("return")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_RETURN;
+        node->lhs = expr();
+    } else {
+        node = expr();
+    }
+
+    if (!consume(";"))
+        error_at(token->str, "';'ではないトークンです");
     return node;
 }
 

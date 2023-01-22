@@ -49,4 +49,8 @@ assert '1>=2;' 0
 
 assert "a=2;b=3;a+b;" 5
 assert "hoge=2;honi=3;hoge+honi;" 5
+assert "return 1;" 1
+assert "foo = 100 ;bar = 10; return foo - bar;" 90
+# assert "returnx = 5;return returnx;" 5
+
 echo OK

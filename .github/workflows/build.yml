@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: kaede auto build and test
 
 on:
   push:

@@ -3,3 +3,6 @@
 tmp*
 a.out
 kaede
+tokenize
+parse
+unit_test

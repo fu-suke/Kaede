@@ -1,20 +1,53 @@
 #!/bin/bash
+test_kind="$1" # 何も指定がなかったら全体テスト
+
 assert() {
   input="$1"
   expected="$2"
 
+  # トークナイズテスト
+  if [ "$test_kind" = "tokenize" ]; then
+    echo "tokenize $input"
+    ./unit_test "tokenize" "$input"
+  fi
+  
+  # 構文解析テスト
+  if [ "$test_kind" = "parse" ]; then
+    echo "parse $input"
+    ./unit_test "parse" "$input"
+  fi
+
+  # 全体テスト
+  if [ "$test_kind" = "" ]; then
   ./kaede "$input" > tmp.s
   cc -o tmp tmp.s
   ./tmp
   actual="$?"
 
-  if [ "$actual" = "$expected" ]; then
-    echo "$input => $actual"
-  else
-    echo "$input => $expected expected, but got $actual"
-    exit 1
+    if [ "$actual" = "$expected" ]; then
+      echo "$input => $actual"
+    else
+      echo "$input => $expected expected, but got $actual"
+      exit 1
+    fi
   fi
 }
+
+# ビルドは一回のみ
+if [ "$test_kind" = "tokenize" ]; then
+  echo "tokenize test"
+  make unit_test > /dev/null # ビルドの結果は出力しない
+fi
+
+if [ "$test_kind" = "parse" ]; then
+  echo "parse test"
+  make unit_test > /dev/null 
+fi
+
+if [ "$test_kind" = "" ]; then
+  echo "all test"
+  make > /dev/null
+fi
 
 assert "0;" 0
 assert "42;" 42
@@ -51,6 +84,8 @@ assert "a=2;b=3;a+b;" 5
 assert "hoge=2;honi=3;hoge+honi;" 5
 assert "return 1;" 1
 assert "foo = 100 ;bar = 10; return foo - bar;" 90
-# assert "returnx = 5;return returnx;" 5
+assert "returnx = 5;return returnx;" 5
+
+assert "if (1==2) return 1; else return 2;" 2
 
 echo OK

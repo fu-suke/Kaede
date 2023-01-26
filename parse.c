@@ -5,9 +5,11 @@ Token *token;
 LVar *locals;
 
 // Consumes the current token if it matches `op`.
-bool consume(char *op) {
-    if ((token->kind != TK_RESERVED && token->kind != TK_RETURN) ||
-        strlen(op) != token->len || memcmp(token->str, op, token->len))
+bool consume(char *op, TokenKind token_kind) {
+    // if ((token->kind != TK_RESERVED && token->kind != TK_RETURN &&
+    //      token->kind != TK_IF && token->kind != TK_ELSE) ||
+    if (token->kind != token_kind || strlen(op) != token->len ||
+        memcmp(token->str, op, token->len))
         return false;
     token = token->next;
     return true;
@@ -78,10 +80,10 @@ void program() {
     code[i] = NULL;
 }
 
-// stmt = expr ';'
+// stmt = expr ';' | "return" expr ";" |"if" "(" expr ")" stmt ("else" stmt)?
 Node *stmt() {
     Node *node;
-    if (consume("return")) {
+    if (consume("return", TK_RETURN)) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();
@@ -89,7 +91,7 @@ Node *stmt() {
         node = expr();
     }
 
-    if (!consume(";"))
+    if (!consume(";", TK_RESERVED))
         error_at(token->str, "';'ではないトークンです");
     return node;
 }
@@ -100,7 +102,7 @@ Node *expr() { return assign(); }
 // equality ("=" assign)?
 Node *assign() {
     Node *node = equality();
-    if (consume("="))
+    if (consume("=", TK_RESERVED))
         node = new_binary(ND_ASSIGN, node, assign());
     return node;
 }
@@ -110,9 +112,9 @@ Node *equality() {
     Node *node = relational();
 
     for (;;) {
-        if (consume("=="))
+        if (consume("==", TK_RESERVED))
             node = new_binary(ND_EQ, node, relational());
-        else if (consume("!="))
+        else if (consume("!=", TK_RESERVED))
             node = new_binary(ND_NE, node, relational());
         else
             return node;
@@ -124,13 +126,13 @@ Node *relational() {
     Node *node = add();
 
     for (;;) {
-        if (consume("<"))
+        if (consume("<", TK_RESERVED))
             node = new_binary(ND_LT, node, add());
-        else if (consume("<="))
+        else if (consume("<=", TK_RESERVED))
             node = new_binary(ND_LE, node, add());
-        else if (consume(">"))
+        else if (consume(">", TK_RESERVED))
             node = new_binary(ND_LT, add(), node);
-        else if (consume(">="))
+        else if (consume(">=", TK_RESERVED))
             node = new_binary(ND_LE, add(), node);
         else
             return node;
@@ -142,9 +144,9 @@ Node *add() {
     Node *node = mul();
 
     for (;;) {
-        if (consume("+"))
+        if (consume("+", TK_RESERVED))
             node = new_binary(ND_ADD, node, mul());
-        else if (consume("-"))
+        else if (consume("-", TK_RESERVED))
             node = new_binary(ND_SUB, node, mul());
         else
             return node;
@@ -156,9 +158,9 @@ Node *mul() {
     Node *node = unary();
 
     for (;;) {
-        if (consume("*"))
+        if (consume("*", TK_RESERVED))
             node = new_binary(ND_MUL, node, unary());
-        else if (consume("/"))
+        else if (consume("/", TK_RESERVED))
             node = new_binary(ND_DIV, node, unary());
         else
             return node;
@@ -168,9 +170,9 @@ Node *mul() {
 // unary = ("+" | "-")? unary
 //       | primary
 Node *unary() {
-    if (consume("+"))
+    if (consume("+", TK_RESERVED))
         return unary();
-    if (consume("-"))
+    if (consume("-", TK_RESERVED))
         return new_binary(ND_SUB, new_num(0), unary());
     return primary();
 }
@@ -195,7 +197,7 @@ LVar *find_lvar(Token *tok) {
 
 // num | ident | "(" expr ")"
 Node *primary() {
-    if (consume("(")) {
+    if (consume("(", TK_RESERVED)) {
         Node *node = expr();
         expect(")");
         return node;

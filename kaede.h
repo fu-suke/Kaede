@@ -66,6 +66,7 @@ typedef struct Node Node;
 struct Node {
     NodeKind kind; // Node kind
     Node *lhs;     // Left-hand side
+    Node *chs;     // Center side
     Node *rhs;     // Right-hand side
     int val;       // kindがND_NUMの場合のみ使う
     int offset;    // kindがND_LVARの場合のみ使う

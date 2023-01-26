@@ -1,4 +1,6 @@
 #include "kaede.h"
+int endcount = 0;
+int elsecount = 0;
 
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
@@ -10,6 +12,7 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+
     switch (node->kind) {
     case ND_RETURN:
         gen(node->lhs);
@@ -36,6 +39,27 @@ void gen(Node *node) {
         printf("  mov [rax], rdi\n");
         printf("  push rdi\n");
         return;
+    // if (A) B else C
+    case ND_IF:
+        gen(node->lhs);        // condition
+        printf("  pop rax\n"); // condition を rax に pop
+        printf("  cmp rax, 0\n");
+        if (node->rhs == NULL) { // else がないとき
+            int tmp = endcount;
+            printf("  je  .Lend%d\n", endcount++); // rax が 0 なら if を抜ける
+            gen(node->chs); // B をコンパイルしたコード
+            printf(".Lend%d:\n", tmp);
+        } else { // else があるとき
+            // printf("hoge\n");
+            int tmp_else = elsecount;
+            printf("  je  .Lelse%d\n", elsecount++);
+            gen(node->chs); // B をコンパイルしたコード
+            int tmp_end = endcount;
+            printf("  jmp .Lend%d\n", endcount++);
+            printf(".Lelse%d:\n", tmp_else);
+            gen(node->rhs); // C をコンパイルしたコード
+            printf(".Lend%d:\n", tmp_end);
+        }
     }
 
     gen(node->lhs);

@@ -87,6 +87,15 @@ Node *stmt() {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();
+    } else if (consume("if", TK_IF)) {
+        expect("(");
+        node = new_ternary(ND_IF, expr(), NULL, NULL);
+        expect(")");
+        node->chs = stmt(); // true
+        if (consume("else", TK_ELSE)) {
+            node->rhs = stmt(); // false
+        }
+        return node;
     } else {
         node = expr();
     }

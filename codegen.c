@@ -60,6 +60,7 @@ void gen(Node *node) {
             gen(node->rhs); // C をコンパイルしたコード
             printf(".Lend%d:\n", tmp_end);
         }
+        return;
     }
 
     gen(node->lhs);
@@ -82,22 +83,22 @@ void gen(Node *node) {
         printf("  cqo\n");
         printf("  idiv rdi\n");
         break;
-    case ND_EQ:
+    case ND_EQ: // ==
         printf("  cmp rax, rdi\n");
         printf("  sete al\n");
         printf("  movzb rax, al\n");
         break;
-    case ND_NE:
+    case ND_NE: // !=
         printf("  cmp rax, rdi\n");
         printf("  setne al\n");
         printf("  movzb rax, al\n");
         break;
-    case ND_LT:
+    case ND_LT: // <
         printf("  cmp rax, rdi\n");
         printf("  setl al\n");
         printf("  movzb rax, al\n");
         break;
-    case ND_LE:
+    case ND_LE: // <=
         printf("  cmp rax, rdi\n");
         printf("  setle al\n");
         printf("  movzb rax, al\n");

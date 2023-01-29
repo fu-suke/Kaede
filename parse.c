@@ -80,7 +80,8 @@ void program() {
     code[i] = NULL;
 }
 
-// stmt = expr ';' | "return" expr ";" |"if" "(" expr ")" stmt ("else" stmt)?
+// stmt = expr ';' | "return" expr ";" |"if" "(" expr ")" stmt ("else" stmt)?  |
+// "while" "(" expr ")" stmt
 Node *stmt() {
     Node *node;
     if (consume("return", TK_RETURN)) {
@@ -95,6 +96,12 @@ Node *stmt() {
         if (consume("else", TK_ELSE)) {
             node->rhs = stmt(); // false
         }
+        return node;
+    } else if (consume("while", TK_WHILE)) {
+        expect("(");
+        node = new_binary(ND_WHILE, expr(), NULL);
+        expect(")");
+        node->rhs = stmt();
         return node;
     } else {
         node = expr();

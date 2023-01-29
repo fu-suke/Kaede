@@ -59,6 +59,7 @@ typedef enum {
     ND_LVAR,   // ローカル変数
     ND_RETURN, // return
     ND_IF,
+    ND_WHILE,
 } NodeKind;
 
 // AST node type

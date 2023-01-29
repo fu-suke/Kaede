@@ -1,4 +1,5 @@
 #include "kaede.h"
+int begincount = 0;
 int endcount = 0;
 int elsecount = 0;
 
@@ -60,6 +61,19 @@ void gen(Node *node) {
             gen(node->rhs); // C をコンパイルしたコード
             printf(".Lend%d:\n", tmp_end);
         }
+        return;
+    // while (A) B
+    case ND_WHILE:
+        int tmp_begin = begincount;
+        printf(".Lbegin%d:\n", tmp_begin);
+        gen(node->lhs);        // condition
+        printf("  pop rax\n"); // condition を rax に pop
+        printf("  cmp rax, 0\n");
+        int tmp_end = endcount;
+        printf("  je  .Lend%d\n", endcount++);
+        gen(node->rhs);
+        printf("  jmp .Lbegin%d\n", begincount++);
+        printf(".Lend%d:\n", tmp_end);
         return;
     }
 

@@ -88,5 +88,6 @@ assert "returnx = 5;return returnx;" 5
 
 assert "if (1==2) return 1; else return 2;" 2
 assert "if (1==1) return 1; " 1
+assert "x=0;while (x<10) x=x+1; return x;" 10
 
 echo OK

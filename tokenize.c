@@ -96,6 +96,13 @@ Token *tokenize() {
             continue;
         }
 
+        // forをトークン化
+        if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3])) {
+            cur = new_token(TK_FOR, cur, p, 3);
+            p += 3;
+            continue;
+        }
+
         // 変数の1文字目は [a-zA-Z_]
         if (('a' <= *p && *p <= 'z') || *p == '_' || ('A' <= *p && *p <= 'Z')) {
             int var_len = 1;

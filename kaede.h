@@ -40,7 +40,7 @@ extern Token *token;
 
 void error(char *fmt, ...);
 
-void error_at(char *loc, char *fmt, ...);
+void error_at(char *loc, int r, char *fmt, ...);
 
 Token *tokenize();
 
@@ -76,8 +76,24 @@ struct Node {
     Node *rhs;     // Right-hand side
     int val;       // kindがND_NUMの場合のみ使う
     int offset;    // kindがND_LVARの場合のみ使う
-    Stmt *stmt; // kindがND_BLOCKの場合のみ使う
+    /*Stmt *stmt*/; // kindがND_BLOCKの場合のみ使う
+    Node *next; // BLOCKの場合につかう // 追加
 };
+
+/* ごていあん
+struct Node {
+    NodeKind kind; // Node kind
+    Node *lhs;     // Left-hand side
+    Node *rhs;     // Right-hand side
+    Node *init for
+    Node cond; if while for
+    Node step; for
+    int val;       // kindがND_NUMの場合のみ使う
+    int offset;    // kindがND_LVARの場合のみ使う
+    Stmt *stmt; // kindがND_BLOCKの場合のみ使う
+    Node *next;
+};
+*/
 
 struct Stmt {
     Node *node;

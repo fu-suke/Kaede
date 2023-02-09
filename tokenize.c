@@ -12,11 +12,11 @@ void error(char *fmt, ...) {
 char *user_input;
 
 // Reports an error location and exit.
-void error_at(char *loc, char *fmt, ...) {
+void error_at(char *loc, int r, char *fmt,  ...) {
     va_list ap;
     va_start(ap, fmt);
 
-    int pos = loc - user_input;
+    int pos = loc - user_input - r;
     fprintf(stderr, "%s\n", user_input);
     fprintf(stderr, "%*s", pos, ""); // print pos spaces.
     fprintf(stderr, "^ ");
@@ -128,7 +128,7 @@ Token *tokenize() {
             continue;
         }
 
-        error_at(p, "invalid token");
+        error_at(p, 0, "無効なトークンです");
     }
 
     new_token(TK_EOF, cur, p, 0);

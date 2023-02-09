@@ -19,14 +19,14 @@ bool consume(char *op, TokenKind token_kind) {
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len ||
         memcmp(token->str, op, token->len))
-        error_at(token->str, "expected \"%s\"", op);
+        error_at(token->str, 0, "\"%s\"が入ります", op);
     token = token->next;
 }
 
 // Ensure that the current token is TK_NUM.
 int expect_number() {
     if (token->kind != TK_NUM)
-        error_at(token->str, "expected a number");
+        error_at(token->str, 0, "数字が入ります");
     int val = token->val;
     token = token->next;
     return val;
@@ -37,7 +37,8 @@ bool at_eof() { return token->kind == TK_EOF; }
 Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
-    node->stmt = NULL;
+    /*node->stmt = NULL;*/
+    node->next = NULL; // 追加
     return node;
 }
 
@@ -80,13 +81,14 @@ void program() {
     code[i] = NULL;
 }
 
-// stmt = expr ';' 
-// | "return" expr ";" 
-// | "if" "(" expr ")" stmt ("else" stmt)?  
+// stmt = expr ';'
+// | "return" expr ";"
+// | "if" "(" expr ")" stmt ("else" stmt)?
 // | "while" "(" expr ")" stmt
+// | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 // | "{" stmt* "}"
 
-Stmt *new_stmt(){
+Stmt *new_stmt() {
     Stmt *ret = calloc(1, sizeof(Stmt));
     ret->node = NULL;
     ret->next = NULL;
@@ -95,17 +97,29 @@ Stmt *new_stmt(){
 
 Node *stmt() {
     Node *node;
-    if (consume("{", TK_RESERVED)){
+    if (consume("{", TK_RESERVED)) {
         node = new_node(ND_BLOCK);
+        /*
         Stmt *current = new_stmt(); // head用の空のStmt
-        node->stmt = current;
-        while(!consume("}", TK_RESERVED)){
+        */
+        Node *current = node; // 追加
+        /*node->stmt = current;*/
+        if (consume("}", TK_RESERVED)) {
+            error_at(token->str, 2, "{}の中に文がありません");
+        }
+        while (!consume("}", TK_RESERVED)) {
+            // 追加
+            Node *new = stmt();
+            current->next = new;
+            current = new;
+            /*
             Stmt *new = new_stmt();
             new->node = stmt();
             current->next = new;
             current = current->next;
+            */
         }
-        return node;   
+        return node;
     }
     if (consume("return", TK_RETURN)) {
         node = calloc(1, sizeof(Node));
@@ -126,12 +140,56 @@ Node *stmt() {
         expect(")");
         node->rhs = stmt();
         return node;
+    } else if (consume("for", TK_FOR)) {
+
+        expect("(");
+        Node *init = NULL, *condition, *step=NULL, *sentence=NULL;
+        // init
+        if (!consume(";", TK_RESERVED)) {
+            init = expr();
+            expect(";");
+        }
+        // condition
+        if (!consume(";", TK_RESERVED)) { // condition あり
+            condition = expr();           // i < 5
+            expect(";");
+        } else { // condition なし
+            // 必ず true になるようなノードを適当に作る
+            condition = new_binary(ND_EQ, new_num(1), new_num(1));
+        }
+        // step
+        if (!consume(")", TK_RESERVED)) { // step あり
+            step = expr();
+            expect(")");
+        }
+        // sentence
+        sentence = stmt();
+
+        Node *node = new_node(ND_BLOCK);
+        Node *current = node;
+        // 合体
+        if (init) {
+            current->next = init;
+            current = current->next;
+        }
+        Node *blk = new_node(ND_BLOCK);
+        Node *loop = new_binary(ND_WHILE, condition, blk);
+        current->next = loop;
+        blk->next = sentence;
+        while (sentence->next) {
+            sentence = sentence->next;
+        }
+        if (step) {
+            sentence->next = step;
+        }
+        return node;
+
     } else {
         node = expr();
     }
 
     if (!consume(";", TK_RESERVED))
-        error_at(token->str, "';'ではないトークンです");
+        error_at(token->str, 0, "';'ではないトークンです");
     return node;
 }
 

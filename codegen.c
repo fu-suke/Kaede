@@ -77,9 +77,10 @@ void gen(Node *node) {
         return;
     }
     case ND_BLOCK:{
-        Stmt *current = node->stmt->next;
+        /* Stmt *current = node->stmt->next; */
+        Node *current = node->next;
         while(current != NULL){
-            gen(current->node);
+            gen(current);
             current = current->next;
             if(current != NULL){
                 printf("  pop rax\n");

@@ -37,6 +37,7 @@ bool at_eof() { return token->kind == TK_EOF; }
 Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
+    node->stmt = NULL;
     return node;
 }
 
@@ -76,14 +77,36 @@ void program() {
     while (!at_eof()) {
         code[i++] = stmt();
     }
-
     code[i] = NULL;
 }
 
-// stmt = expr ';' | "return" expr ";" |"if" "(" expr ")" stmt ("else" stmt)?  |
-// "while" "(" expr ")" stmt
+// stmt = expr ';' 
+// | "return" expr ";" 
+// | "if" "(" expr ")" stmt ("else" stmt)?  
+// | "while" "(" expr ")" stmt
+// | "{" stmt* "}"
+
+Stmt *new_stmt(){
+    Stmt *ret = calloc(1, sizeof(Stmt));
+    ret->node = NULL;
+    ret->next = NULL;
+    return ret;
+}
+
 Node *stmt() {
     Node *node;
+    if (consume("{", TK_RESERVED)){
+        node = new_node(ND_BLOCK);
+        Stmt *current = new_stmt(); // head用の空のStmt
+        node->stmt = current;
+        while(!consume("}", TK_RESERVED)){
+            Stmt *new = new_stmt();
+            new->node = stmt();
+            current->next = new;
+            current = current->next;
+        }
+        return node;   
+    }
     if (consume("return", TK_RETURN)) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;

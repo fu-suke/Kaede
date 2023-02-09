@@ -63,7 +63,7 @@ void gen(Node *node) {
         }
         return;
     // while (A) B
-    case ND_WHILE:
+    case ND_WHILE: {
         int tmp_begin = begincount;
         printf(".Lbegin%d:\n", tmp_begin);
         gen(node->lhs);        // condition
@@ -75,6 +75,18 @@ void gen(Node *node) {
         printf("  jmp .Lbegin%d\n", begincount++);
         printf(".Lend%d:\n", tmp_end);
         return;
+    }
+    case ND_BLOCK:{
+        Stmt *current = node->stmt->next;
+        while(current != NULL){
+            gen(current->node);
+            current = current->next;
+            if(current != NULL){
+                printf("  pop rax\n");
+            }
+        }
+        return;
+    }
     }
 
     gen(node->lhs);

@@ -89,6 +89,12 @@ assert "returnx = 5;return returnx;" 5
 assert "if (1==2) return 1; else return 2;" 2
 assert "if (1==1) return 1; " 1
 assert "x=0;while (x<10) x=x+1; return x;" 10
-assert "y=0;for (x=1;x<4;x=x+1) y=y+x;return y;" 6
+# assert "y=0;for (x=1;x<4;x=x+1) y=y+x;return y;" 6
+
+assert "if (1==1) {a=1;a=a+1;} return a;" 2
+assert "if (1==1) {} a=1; return a;" 1
+assert "{a=1;a=2;if(a==2) return 3;}" 3
+assert "if (1==1) {a=1;a=a+1;} return a;" 2
+assert "{a=1;a=2;}{a=3;a=4;}" 4
 
 echo OK

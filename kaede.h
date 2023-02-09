@@ -19,6 +19,7 @@ typedef enum {
     TK_ELSE,     // else
     TK_WHILE,    // while
     TK_FOR,      // for
+    // TK_BLOCK,    // {}
 } TokenKind;
 
 // Token type
@@ -62,10 +63,12 @@ typedef enum {
     ND_RETURN, // return
     ND_IF,
     ND_WHILE,
+    ND_BLOCK,
 } NodeKind;
 
 // AST node type
 typedef struct Node Node;
+typedef struct Stmt Stmt;
 struct Node {
     NodeKind kind; // Node kind
     Node *lhs;     // Left-hand side
@@ -73,8 +76,13 @@ struct Node {
     Node *rhs;     // Right-hand side
     int val;       // kindがND_NUMの場合のみ使う
     int offset;    // kindがND_LVARの場合のみ使う
+    Stmt *stmt; // kindがND_BLOCKの場合のみ使う
 };
 
+struct Stmt {
+    Node *node;
+    Stmt *next;
+};
 Node *expr();
 
 typedef struct LVar LVar;

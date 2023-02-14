@@ -42,8 +42,10 @@ void gen(Node *node) {
         return;
     // if (A) B else C
     case ND_IF:
-        gen(node->lhs);        // condition
-        printf("  pop rax\n"); // condition を rax に pop
+        gen(node->lhs); // A をコンパイルしたコード
+        printf(
+            "  pop rax\n"); // A
+                            // の結果がスタックトップに残っているのでとってくる
         printf("  cmp rax, 0\n");
         if (node->rhs == NULL) { // else がないとき
             int tmp = endcount;
@@ -76,13 +78,12 @@ void gen(Node *node) {
         printf(".Lend%d:\n", tmp_end);
         return;
     }
-    case ND_BLOCK:{
-        /* Stmt *current = node->stmt->next; */
-        Node *current = node->next;
-        while(current != NULL){
+    case ND_BLOCK: {
+        Node *current = node->body;
+        while (current != NULL) {
             gen(current);
             current = current->next;
-            if(current != NULL){
+            if (current != NULL) {
                 printf("  pop rax\n");
             }
         }

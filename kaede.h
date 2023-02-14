@@ -68,7 +68,6 @@ typedef enum {
 
 // AST node type
 typedef struct Node Node;
-typedef struct Stmt Stmt;
 struct Node {
     NodeKind kind; // Node kind
     Node *lhs;     // Left-hand side
@@ -76,29 +75,10 @@ struct Node {
     Node *rhs;     // Right-hand side
     int val;       // kindがND_NUMの場合のみ使う
     int offset;    // kindがND_LVARの場合のみ使う
-    /*Stmt *stmt*/; // kindがND_BLOCKの場合のみ使う
-    Node *next; // BLOCKの場合につかう // 追加
+    Node *body;    // kindがND_BLOCKの場合のみ使う
+    Node *next;    // BLOCKの場合につかう // 追加
 };
 
-/* ごていあん
-struct Node {
-    NodeKind kind; // Node kind
-    Node *lhs;     // Left-hand side
-    Node *rhs;     // Right-hand side
-    Node *init for
-    Node cond; if while for
-    Node step; for
-    int val;       // kindがND_NUMの場合のみ使う
-    int offset;    // kindがND_LVARの場合のみ使う
-    Stmt *stmt; // kindがND_BLOCKの場合のみ使う
-    Node *next;
-};
-*/
-
-struct Stmt {
-    Node *node;
-    Stmt *next;
-};
 Node *expr();
 
 typedef struct LVar LVar;

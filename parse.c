@@ -62,6 +62,25 @@ Node *new_num(int val) {
     node->val = val;
     return node;
 }
+
+void add_node_to_block(Node *blk, Node *node) {
+    if (!node) {
+        return;
+    }
+    if (blk->kind != ND_BLOCK) {
+        error_at(token->str, 0, "ブロックではありません");
+    }
+    if (!blk->body) {
+        blk->body = node;
+        return;
+    }
+    Node *current = blk->body;
+    while (current->next) {
+        current = current->next;
+    }
+    current->next = node;
+}
+
 Node *code[100];
 Node *stmt();
 Node *assign();
@@ -86,14 +105,7 @@ void program() {
 // | "if" "(" expr ")" stmt ("else" stmt)?
 // | "while" "(" expr ")" stmt
 // | "for" "(" expr? ";" expr? ";" expr? ")" stmt
-// | "{" stmt* "}"
-
-Stmt *new_stmt() {
-    Stmt *ret = calloc(1, sizeof(Stmt));
-    ret->node = NULL;
-    ret->next = NULL;
-    return ret;
-}
+// | "{" stmt+ "}"
 
 Node *stmt() {
     Node *node;
@@ -107,6 +119,9 @@ Node *stmt() {
         if (consume("}", TK_RESERVED)) {
             error_at(token->str, 2, "{}の中に文がありません");
         }
+        Node *new = stmt();
+        current->body = new;
+        current = current->body;
         while (!consume("}", TK_RESERVED)) {
             // 追加
             Node *new = stmt();
@@ -125,6 +140,7 @@ Node *stmt() {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();
+        // if (A) B; else C;
     } else if (consume("if", TK_IF)) {
         expect("(");
         node = new_ternary(ND_IF, expr(), NULL, NULL);
@@ -143,7 +159,7 @@ Node *stmt() {
     } else if (consume("for", TK_FOR)) {
 
         expect("(");
-        Node *init = NULL, *condition, *step=NULL, *sentence=NULL;
+        Node *init = NULL, *condition, *step = NULL, *sentence = NULL;
         // init
         if (!consume(";", TK_RESERVED)) {
             init = expr();
@@ -166,22 +182,18 @@ Node *stmt() {
         sentence = stmt();
 
         Node *node = new_node(ND_BLOCK);
-        Node *current = node;
+        // Node *current = node;
         // 合体
-        if (init) {
-            current->next = init;
-            current = current->next;
-        }
+        // if (init) {
+        //     current->body = init;
+        //     current = current->body;
+        // }
+        add_node_to_block(node, init);
         Node *blk = new_node(ND_BLOCK);
         Node *loop = new_binary(ND_WHILE, condition, blk);
-        current->next = loop;
-        blk->next = sentence;
-        while (sentence->next) {
-            sentence = sentence->next;
-        }
-        if (step) {
-            sentence->next = step;
-        }
+        add_node_to_block(blk, sentence);
+        add_node_to_block(blk, step);
+        add_node_to_block(node, loop);
         return node;
 
     } else {

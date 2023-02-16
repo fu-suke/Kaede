@@ -78,6 +78,7 @@ struct Node {
     int offset;      // kindがND_LVARの場合のみ使う
     char *func_name; // kindがND_FUNCの場合のみ使う
     Node *body;      // kindがND_BLOCKの場合のみ使う
+    Node *args;      // kindがND_FUNCの場合のみ使う
     Node *next;      // BLOCKの場合につかう // 追加
 };
 

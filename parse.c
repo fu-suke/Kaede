@@ -37,7 +37,8 @@ bool at_eof() { return token->kind == TK_EOF; }
 Node *new_node(NodeKind kind) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
-    /*node->stmt = NULL;*/
+    node->body = NULL;
+    node->args = NULL;
     node->next = NULL; // 追加
     return node;
 }
@@ -81,6 +82,24 @@ void add_node_to_block(Node *blk, Node *node) {
     current->next = node;
 }
 
+void add_node_to_args(Node *func, Node *node) {
+    if (!node) {
+        return;
+    }
+    if (func->kind != ND_FUNC) {
+        error_at(token->str, 0, "関数ではありません");
+    }
+    if (!func->args) {
+        func->args = node;
+        return;
+    }
+    Node *current = func->args;
+    while (current->next) {
+        current = current->next;
+    }
+    current->next = node;
+}
+
 Node *code[100];
 Node *stmt();
 Node *assign();
@@ -111,11 +130,7 @@ Node *stmt() {
     Node *node;
     if (consume("{", TK_RESERVED)) {
         node = new_node(ND_BLOCK);
-        /*
-        Stmt *current = new_stmt(); // head用の空のStmt
-        */
-        Node *current = node; // 追加
-        /*node->stmt = current;*/
+        Node *current = node;
         if (consume("}", TK_RESERVED)) {
             error_at(token->str, 2, "{}の中に文がありません");
         }
@@ -123,16 +138,9 @@ Node *stmt() {
         current->body = new;
         current = current->body;
         while (!consume("}", TK_RESERVED)) {
-            // 追加
             Node *new = stmt();
             current->next = new;
             current = new;
-            /*
-            Stmt *new = new_stmt();
-            new->node = stmt();
-            current->next = new;
-            current = current->next;
-            */
         }
         return node;
     }
@@ -185,12 +193,6 @@ Node *stmt() {
         sentence = stmt();
 
         Node *node = new_node(ND_BLOCK);
-        // Node *current = node;
-        // 合体
-        // if (init) {
-        //     current->body = init;
-        //     current = current->body;
-        // }
         add_node_to_block(node, init);
         Node *blk = new_node(ND_BLOCK);
         Node *loop = new_binary(ND_WHILE, condition, blk);
@@ -318,27 +320,31 @@ Node *primary() {
     }
     Token *tok = consume_ident();
     if (tok) { // 変数名 or 関数名がきたとき
-        Node *node = calloc(1, sizeof(Node));
+        Node *node = new_node(ND_LVAR);
+        LVar *lvar = find_lvar(tok); // 変数名が見つかったらそのアドレスを返す
         // FUNCと判断するため
         // consume("(") が true だったら node->kind = ND_FUNC; else ND_LVAR
-        LVar *lvar = find_lvar(tok);
 
         char *name = calloc(1, (tok->len + 1) * sizeof(char));
         strncpy(name, tok->str, tok->len);
-        // node->func_name = strndup(tok->str, tok->len);
+        // 関数名を退避
         name[tok->len] = '\0';
-        node->func_name = name;
 
-        //  printf("hoge\n");
-
+        // 関数呼び出し
         if (consume("(", TK_RESERVED)) {
             node->kind = ND_FUNC;
-            expect(")");
-            // printf("%s\n", node->func_name);
-        } else {
-            node->kind = ND_LVAR;
-            node->func_name = NULL;
+            node->func_name = name;
+
+            if (!consume(")", TK_RESERVED)) {
+                add_node_to_args(node, add());
+                while (consume(",", TK_RESERVED)) { // 引数が複数ある場合
+                    add_node_to_args(node, add());
+                }
+                expect(")");
+            }
         }
+
+        // 変数
         if (lvar) {
             node->offset = lvar->offset;
         } else {

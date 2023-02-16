@@ -110,5 +110,6 @@ assert "for(x=0;x<10;x=x+1) if(x==3)return x;" 3
 assert "a=0;for(x=0;x<10;x=x+1) a = a+2; a;" 20
 assert "foo();return 1;" 1
 assert "for(x=0;x<10;x=x+1) foo(); x;" 10
-
+assert "a=1;b=2;sum(a,b);return 1;" 1
+assert "i=0;while(i<5){sum(2,i); i=i+1;} i;" 5
 echo OK

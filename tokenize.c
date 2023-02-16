@@ -12,7 +12,7 @@ void error(char *fmt, ...) {
 char *user_input;
 
 // Reports an error location and exit.
-void error_at(char *loc, int r, char *fmt,  ...) {
+void error_at(char *loc, int r, char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
 
@@ -64,7 +64,7 @@ Token *tokenize() {
         }
 
         // Single-letter punctuator
-        if (strchr("+-*/()<>=;{}", *p)) {
+        if (strchr("+-*/()<>=;{},", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }

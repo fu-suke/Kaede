@@ -3,6 +3,8 @@ int begincount = 0;
 int endcount = 0;
 int elsecount = 0;
 
+char *arg_reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
         error("代入の左辺値が変数ではありません");
@@ -16,7 +18,21 @@ void gen(Node *node) {
 
     switch (node->kind) {
     case ND_FUNC:
-        printf("  call %s\n", node->func_name);
+        // 引数を評価したものをスタックに積む
+
+        int args_count = 0; // 引数の数を数える
+        Node *current = node->args;
+        while (current != NULL) {
+            args_count++;
+            gen(current); // 引数を評価してスタックに積む
+            current = current->next; // 次の引数へ
+        }
+        for (; args_count > 0; args_count--) {
+            printf("  pop %s\n",
+                   arg_reg[args_count - 1]); // 引数をレジスタに代入していく
+        }
+
+        printf("  call %s\n", node->func_name); // 関数を呼ぶ
         return;
     case ND_RETURN:
         gen(node->lhs);

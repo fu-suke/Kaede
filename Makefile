@@ -1,5 +1,5 @@
 CFLAGS=-std=c11 -g -fno-common
-SRCS=tokenize.c parse.c codegen.c main.c print.c
+SRCS=tokenize.c parse.c codegen.c main.c func_def.c
 OBJS=$(SRCS:.c=.o)
 
 kaede: $(OBJS)

@@ -26,7 +26,7 @@ assert() {
   # 全体テスト
   if [ "$test_kind" = "" ]; then
   ./kaede "$input" > tmp.s
-  cc -o tmp tmp.s print.o
+  cc -o tmp tmp.s func_def.o
   print_result=`./tmp`
   actual="$?"
 

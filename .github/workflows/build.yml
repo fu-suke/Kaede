@@ -15,6 +15,10 @@ jobs:
     - uses: actions/checkout@v3
     - name: build
       run: make
-    - name: test
+    - name: test-tokenize
+      run: make test-tokenize
+    - name: test-parse
       run: make test-parse
+    - name: test-run
+      run: make test
 

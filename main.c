@@ -44,16 +44,19 @@ int main(int argc, char **argv) {
     int mem = locals_len * 8;
     printf("  sub rsp, %d\n", mem);
 
+    printf(" # ここから木が始まる\n");
+
     // 先頭の式から順にコード生成
     for (int i = 0; code[i]; i++) {
         gen(code[i]);
 
         // 式の評価結果としてスタックに一つの値が残っている
         // はずなので、スタックが溢れないようにポップしておく
-        printf("  pop rax\n");
+        printf("  pop rax #木の終わり\n");
     }
 
     // エピローグ
+    printf(" # エピローグ\n");
     // 最後の式の結果がRAXに残っているのでそれが返り値になる
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");

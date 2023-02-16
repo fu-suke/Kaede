@@ -47,12 +47,17 @@ void gen(Node *node) {
             "  pop rax\n"); // A
                             // の結果がスタックトップに残っているのでとってくる
         printf("  cmp rax, 0\n");
+        // ソースコードのif文にelseが無いときはパーザで強制的にelse
+        // 0;を追加している
+        /*
         if (node->rhs == NULL) { // else がないとき
             int tmp = endcount;
             printf("  je  .Lend%d\n", endcount++); // rax が 0 なら if を抜ける
             gen(node->chs); // B をコンパイルしたコード
             printf(".Lend%d:\n", tmp);
-        } else { // else があるとき
+        } else
+        */
+        {
             // printf("hoge\n");
             int tmp_else = elsecount;
             printf("  je  .Lelse%d\n", elsecount++);

@@ -307,7 +307,9 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-// num | ident | "(" expr ")"
+//   num
+// | ident ("("")")?
+// | "(" expr ")"
 Node *primary() {
     if (consume("(", TK_RESERVED)) {
         Node *node = expr();
@@ -315,11 +317,28 @@ Node *primary() {
         return node;
     }
     Token *tok = consume_ident();
-    if (tok) {
+    if (tok) { // 変数名 or 関数名がきたとき
         Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_LVAR;
-
+        // FUNCと判断するため
+        // consume("(") が true だったら node->kind = ND_FUNC; else ND_LVAR
         LVar *lvar = find_lvar(tok);
+
+        char *name = calloc(1, (tok->len + 1) * sizeof(char));
+        strncpy(name, tok->str, tok->len);
+        // node->func_name = strndup(tok->str, tok->len);
+        name[tok->len] = '\0';
+        node->func_name = name;
+
+        //  printf("hoge\n");
+
+        if (consume("(", TK_RESERVED)) {
+            node->kind = ND_FUNC;
+            expect(")");
+            // printf("%s\n", node->func_name);
+        } else {
+            node->kind = ND_LVAR;
+            node->func_name = NULL;
+        }
         if (lvar) {
             node->offset = lvar->offset;
         } else {

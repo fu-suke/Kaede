@@ -26,16 +26,21 @@ assert() {
   # 全体テスト
   if [ "$test_kind" = "" ]; then
   ./kaede "$input" > tmp.s
-  cc -o tmp tmp.s
-  ./tmp
+  cc -o tmp tmp.s print.o
+  print_result=`./tmp`
   actual="$?"
 
     if [ "$actual" = "$expected" ]; then
       echo "$input => $actual"
+      if [ "$print_result" != "" ]; then
+        echo "print: "
+        echo "$print_result"
+      fi
     else
       echo "$input => $expected expected, but got $actual"
       exit 1
     fi
+    echo ""
   fi
 }
 
@@ -103,4 +108,7 @@ assert "x=0; if(x==0) return 1; else return 2;" 1
 assert "x=0; if(x!=0) return 1; else return 2;" 2
 assert "for(x=0;x<10;x=x+1) if(x==3)return x;" 3
 assert "a=0;for(x=0;x<10;x=x+1) a = a+2; a;" 20
+assert "foo();return 1;" 1
+assert "for(x=0;x<10;x=x+1) foo(); x;" 10
+
 echo OK

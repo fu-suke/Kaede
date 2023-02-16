@@ -54,6 +54,9 @@ void *show_node(Node *node) {
         show_block(node->body);
         printf("}");
         break;
+    case 15:
+        printf("func: %s", node->func_name);
+        break;
     default:
         return "";
     }
@@ -101,7 +104,7 @@ int main(int argc, char **argv) {
     user_input = argv[2];
     token = tokenize();
     if (strcmp(test_kind, "tokenize") == 0) {
-        while (!token->next) {
+        while (token->next) {
             for (int i = 0; i < token->len; i++) {
                 printf("%c", token->str[i]);
             }

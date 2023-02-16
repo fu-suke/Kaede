@@ -15,6 +15,9 @@ void gen_lval(Node *node) {
 void gen(Node *node) {
 
     switch (node->kind) {
+    case ND_FUNC:
+        printf("  call %s\n", node->func_name);
+        return;
     case ND_RETURN:
         gen(node->lhs);
         printf("  pop rax\n");

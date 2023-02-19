@@ -30,6 +30,8 @@ int main(int argc, char **argv) {
         locals_len++;
         locals = locals->next;
     }
+    // locals_lenを偶数に切り上げる
+    locals_len = (locals_len + 1) / 2 * 2;
 
     // アセンブリの前半部分を出力
     printf(".intel_syntax noprefix\n");

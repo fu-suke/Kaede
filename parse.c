@@ -64,13 +64,23 @@ Node *new_num(int val) {
     return node;
 }
 
+Token *consume_ident() {
+    if (token->kind != TK_IDENT)
+        return NULL;
+    else {
+        Token *tmp = token;
+        token = token->next;
+        return tmp;
+    }
+};
+
 void add_node_to_block(Node *blk, Node *node) {
     if (!node) {
         return;
     }
-    if (blk->kind != ND_BLOCK) {
-        error_at(token->str, 0, "ブロックではありません");
-    }
+    // if (blk->kind != ND_BLOCK) {
+    //     error_at(token->str, 0, "ブロックではありません");
+    // }
     if (!blk->body) {
         blk->body = node;
         return;
@@ -86,7 +96,7 @@ void add_node_to_args(Node *func, Node *node) {
     if (!node) {
         return;
     }
-    if (func->kind != ND_FUNC) {
+    if (func->kind != ND_FUNC_CALL) {
         error_at(token->str, 0, "関数ではありません");
     }
     if (!func->args) {
@@ -114,13 +124,29 @@ Node *primary();
 void program() {
     int i = 0;
     while (!at_eof()) {
-        code[i++] = stmt();
+        // code[i++] = stmt();
+        code[i++] = function();
     }
     code[i] = NULL;
 }
-
+Node* function(){
+    Node *node;
+    Token *tok=consume_ident();
+        expect("(");
+        // 引数の処理
+            expect(")");
+            expect("{");
+            node = new_node(ND_FUNC_DEF);
+            while (!consume("}", TK_RESERVED)) {
+                add_node_to_block(node, stmt());
+            }
+            return node;
+        
+    
+}
 // stmt = expr ';'
 // | "return" expr ";"
+// | ident "("")" "{" stmt* "}" // 関数定義
 // | "if" "(" expr ")" stmt ("else" stmt)?
 // | "while" "(" expr ")" stmt
 // | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -144,7 +170,8 @@ Node *stmt() {
         }
         return node;
     }
-    if (consume("return", TK_RETURN)) {
+
+    else if (consume("return", TK_RETURN)) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_RETURN;
         node->lhs = expr();
@@ -202,8 +229,9 @@ Node *stmt() {
         node = expr();
     }
 
-    if (!consume(";", TK_RESERVED))
-        error_at(token->str, 0, "';'ではないトークンです");
+    if (!consume(";", TK_RESERVED)){
+    printf("kani");
+        error_at(token->str, 0, "';'ではないトークンです");}
     return node;
 }
 
@@ -288,16 +316,7 @@ Node *unary() {
     return primary();
 }
 
-//
-Token *consume_ident() {
-    if (token->kind != TK_IDENT)
-        return NULL;
-    else {
-        Token *tmp = token;
-        token = token->next;
-        return tmp;
-    }
-};
+
 
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var; var = var->next)
@@ -320,7 +339,7 @@ Node *primary() {
         Node *node = new_node(ND_LVAR);
         LVar *lvar = find_lvar(tok); // 変数名が見つかったらそのアドレスを返す
         // FUNCと判断するため
-        // consume("(") が true だったら node->kind = ND_FUNC; else ND_LVAR
+        // consume("(") が true だったら node->kind = ND_FUNC_CALL; else ND_LVAR
 
         char *name = calloc(1, (tok->len + 1) * sizeof(char));
         strncpy(name, tok->str, tok->len);
@@ -329,7 +348,7 @@ Node *primary() {
 
         // 関数呼び出し
         if (consume("(", TK_RESERVED)) {
-            node->kind = ND_FUNC;
+            node->kind = ND_FUNC_CALL;
             node->func_name = name;
 
             if (!consume(")", TK_RESERVED)) {

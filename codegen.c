@@ -91,7 +91,7 @@ void gen_stmt(Node *node){
 void gen(Node *node) {
 
     switch (node->kind) {
-    case ND_FUNC:
+    case ND_FUNC_CALL:
         // 引数を評価したものをスタックに積む
 
         int args_count = 0; // 引数の数を数える

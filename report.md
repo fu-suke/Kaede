@@ -12,3 +12,14 @@
     - ↑本来は「奇数のときに」pushを行うべきなのになぜか逆にしたら動いた。
 
 ---
+
+
+### 2023/3/9
+---
+- codegenの修正が完了
+    - codegen.cにgen_stmtを生やして、main.cでの無条件のpop raxをやめた。
+    - これに伴い,elseがないときに無条件で右の子にND_NUMをくっつける必要がなくなったため,parse.cの該当部分を削除。code_genのif部分で右の子があるときだけelseの処理をするように修正。
+    
+- 関数定義の実装（引数無し、parseが完了）
+    - 新しいparse用の関数functionを追加。
+    - もとのND_FUNCをND_FUNC_CALLに改名し、さらにND_FUNC_DEFを追加。

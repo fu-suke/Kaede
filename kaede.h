@@ -64,7 +64,8 @@ typedef enum {
     ND_IF,
     ND_WHILE,
     ND_BLOCK,
-    ND_FUNC, // 関数の呼び出し
+    ND_FUNC_DEF, // 関数の定義
+    ND_FUNC_CALL, // 関数の呼び出し
 } NodeKind;
 
 // AST node type
@@ -76,12 +77,13 @@ struct Node {
     Node *rhs;       // Right-hand side
     int val;         // kindがND_NUMの場合のみ使う
     int offset;      // kindがND_LVARの場合のみ使う
-    char *func_name; // kindがND_FUNCの場合のみ使う
+    char *func_name; // kindがND_FUNC_CALLの場合のみ使う
     Node *body;      // kindがND_BLOCKの場合のみ使う
-    Node *args;      // kindがND_FUNCの場合のみ使う
+    Node *args;      // kindがND_FUNC_CALLの場合のみ使う
     Node *next;      // BLOCKの場合につかう // 追加
 };
 
+Node *function();
 Node *expr();
 
 typedef struct LVar LVar;

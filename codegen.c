@@ -2,8 +2,27 @@
 int begincount = 0;
 int endcount = 0;
 int elsecount = 0;
+int stack_depth = 0; // call 命令が来るときに必ず rsp が 16 の倍数になるようにする
 
 char *arg_reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+
+void pop(char *reg){
+    printf("  pop %s\n", reg);
+    stack_depth--;
+    printf("# depth:%d\n", stack_depth);
+}
+
+void push(char *reg){
+    printf("  push %s\n", reg);
+    stack_depth++;
+    printf("# depth:%d\n", stack_depth);
+}
+
+void push_num(int num){
+    printf("  push %d\n", num);
+    stack_depth++;
+    printf("# depth:%d\n", stack_depth);
+}
 
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR)
@@ -11,7 +30,62 @@ void gen_lval(Node *node) {
 
     printf("  mov rax, rbp\n");
     printf("  sub rax, %d\n", node->offset);
-    printf("  push rax\n");
+    push("rax");
+}
+
+void gen_stmt(Node *node){
+    switch (node->kind){
+        // if (A) B else C
+    case ND_IF:{
+        gen(node->lhs); // A をコンパイルしたコード
+        pop("rax");
+                            // の結果がスタックトップに残っているのでとってくる
+        printf("  cmp rax, 0\n");
+
+        if (node->rhs == NULL) { // else がないとき
+            int tmp = endcount;
+            printf("  je  .Lend%d\n", endcount++); // rax が 0 なら if を抜ける
+            gen_stmt(node->chs); // B をコンパイルしたコード
+            printf(".Lend%d:\n", tmp);
+        } else { // else があるとき
+            int tmp_else = elsecount;
+            printf("  je  .Lelse%d\n", elsecount++);
+            gen_stmt(node->chs); // B をコンパイルしたコード
+            int tmp_end = endcount;
+            printf("  jmp .Lend%d\n", endcount++);
+            printf(".Lelse%d:\n", tmp_else);
+            gen_stmt(node->rhs); // C をコンパイルしたコード
+            printf(".Lend%d:\n", tmp_end);
+        }
+        return;
+    }
+        case ND_WHILE: {
+            int tmp_begin = begincount;
+            printf(".Lbegin%d:\n", tmp_begin);
+            gen(node->lhs);        // condition
+            pop("rax");
+            printf("  cmp rax, 0\n");
+            int tmp_end = endcount;
+            printf("  je  .Lend%d\n", endcount++);
+            gen_stmt(node->rhs); // スタックトップに値が残る
+            printf("  jmp .Lbegin%d\n", begincount++);
+            printf(".Lend%d:\n", tmp_end);
+            return;
+    }
+    case ND_BLOCK: {
+        Node *current = node->body;
+        while (current != NULL) {
+            gen_stmt(current);
+            current = current->next;
+        }
+        return;
+    }
+    default:
+        gen(node);
+        pop("rax");
+        return;
+    }
+
 }
 
 void gen(Node *node) {
@@ -28,98 +102,53 @@ void gen(Node *node) {
             current = current->next; // 次の引数へ
         }
         for (; args_count > 0; args_count--) {
-            printf("  pop %s\n",
-                   arg_reg[args_count - 1]); // 引数をレジスタに代入していく
+            pop(arg_reg[args_count - 1]);
         }
 
-        printf("  call %s\n", node->func_name); // 関数を呼ぶ
+        /*　こ↑こ↓　*/
+        if (stack_depth % 2 == 0){
+            push("rsp");
+            printf("  call %s\n", node->func_name);
+            pop("rsp");
+        }
+        else{
+            printf("  call %s\n", node->func_name); // 関数を呼ぶ
+        }
+        push("rax");
         return;
     case ND_RETURN:
         gen(node->lhs);
-        printf("  pop rax\n");
+        pop("rax");
         printf("  mov rsp, rbp\n");
-        printf("  pop rbp\n");
+        pop("rbp");
         printf("  ret\n");
         return;
     case ND_NUM:
-        printf("  push %d\n", node->val);
+        push_num(node->val);
         return;
     case ND_LVAR:
         gen_lval(node);
-        printf("  pop rax\n");
+        pop("rax");
         printf("  mov rax, [rax]\n");
-        printf("  push rax\n");
+        push("rax");
         return;
     case ND_ASSIGN:
         gen_lval(node->lhs);
         gen(node->rhs);
 
-        printf("  pop rdi\n");
-        printf("  pop rax\n");
+        pop("rdi");
+        pop("rax");
         printf("  mov [rax], rdi\n");
-        printf("  push rdi\n");
+        push("rdi");
         return;
-    // if (A) B else C
-    case ND_IF:
-        gen(node->lhs); // A をコンパイルしたコード
-        printf(
-            "  pop rax\n"); // A
-                            // の結果がスタックトップに残っているのでとってくる
-        printf("  cmp rax, 0\n");
-        // ソースコードのif文にelseが無いときはパーザで強制的にelse
-        // 0;を追加している
-        /*
-        if (node->rhs == NULL) { // else がないとき
-            int tmp = endcount;
-            printf("  je  .Lend%d\n", endcount++); // rax が 0 なら if を抜ける
-            gen(node->chs); // B をコンパイルしたコード
-            printf(".Lend%d:\n", tmp);
-        } else
-        */
-        {
-            // printf("hoge\n");
-            int tmp_else = elsecount;
-            printf("  je  .Lelse%d\n", elsecount++);
-            gen(node->chs); // B をコンパイルしたコード
-            int tmp_end = endcount;
-            printf("  jmp .Lend%d\n", endcount++);
-            printf(".Lelse%d:\n", tmp_else);
-            gen(node->rhs); // C をコンパイルしたコード
-            printf(".Lend%d:\n", tmp_end);
-        }
-        return;
-    // while (A) B
-    case ND_WHILE: {
-        int tmp_begin = begincount;
-        printf(".Lbegin%d:\n", tmp_begin);
-        gen(node->lhs);        // condition
-        printf("  pop rax\n"); // condition を rax に pop
-        printf("  cmp rax, 0\n");
-        int tmp_end = endcount;
-        printf("  je  .Lend%d\n", endcount++);
-        gen(node->rhs);
-        printf("  jmp .Lbegin%d\n", begincount++);
-        printf(".Lend%d:\n", tmp_end);
-        return;
-    }
-    case ND_BLOCK: {
-        Node *current = node->body;
-        while (current != NULL) {
-            gen(current);
-            current = current->next;
-            if (current != NULL) {
-                printf("  pop rax\n");
-            }
-        }
-        return;
-    }
+    
     }
 
     gen(node->lhs);
     gen(node->rhs);
 
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
+    pop("rdi");
+    pop("rax");
 
     switch (node->kind) {
     case ND_ADD:
@@ -157,5 +186,5 @@ void gen(Node *node) {
         break;
     }
 
-    printf("  push rax\n");
+    push("rax");
 }

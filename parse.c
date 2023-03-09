@@ -157,9 +157,6 @@ Node *stmt() {
         if (consume("else", TK_ELSE)) {
             node->rhs = stmt();
         } // false
-        else {
-            node->rhs = new_num(0);
-        }
         return node;
     } else if (consume("while", TK_WHILE)) {
         expect("(");

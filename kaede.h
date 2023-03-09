@@ -97,7 +97,10 @@ struct LVar {
 extern LVar *locals;
 
 // Code generator
+void gen_stmt(Node *node);
 void gen(Node *node);
 
 extern Node *code[];
 void program();
+void push(char *reg);
+void pop(char *reg);

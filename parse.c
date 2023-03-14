@@ -125,28 +125,36 @@ void program() {
     int i = 0;
     while (!at_eof()) {
         // code[i++] = stmt();
-        code[i++] = function();
+        printf("kani\n");
+        code[i++] = function_def();
     }
     code[i] = NULL;
 }
-Node* function(){
-    Node *node;
-    Token *tok=consume_ident();
-        expect("(");
-        // 引数の処理
-            expect(")");
-            expect("{");
-            node = new_node(ND_FUNC_DEF);
-            while (!consume("}", TK_RESERVED)) {
-                add_node_to_block(node, stmt());
-            }
-            return node;
+
+Node* function_def(){
+    locals = NULL;
+    Node *node = new_node(ND_FUNC_DEF);
+    Token *tok = consume_ident();
+    // 関数名の取得
+    char *name = calloc(1, (tok->len + 1) * sizeof(char));
+    strncpy(name, tok->str, tok->len);
+    node->func_name = name;
+
+    expect("(");
+    // 引数の処理
+    expect(")");
+    expect("{");
+ 
+    while (!consume("}", TK_RESERVED)) {
+        add_node_to_block(node, stmt()); 
+    }
+    node->locals = locals;
+    return node;
         
     
 }
 // stmt = expr ';'
 // | "return" expr ";"
-// | ident "("")" "{" stmt* "}" // 関数定義
 // | "if" "(" expr ")" stmt ("else" stmt)?
 // | "while" "(" expr ")" stmt
 // | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -230,7 +238,6 @@ Node *stmt() {
     }
 
     if (!consume(";", TK_RESERVED)){
-    printf("kani");
         error_at(token->str, 0, "';'ではないトークンです");}
     return node;
 }
@@ -329,6 +336,7 @@ LVar *find_lvar(Token *tok) {
 // | ident ("("")")?
 // | "(" expr ")"
 Node *primary() {
+    // ( 式 )
     if (consume("(", TK_RESERVED)) {
         Node *node = expr();
         expect(")");
@@ -337,7 +345,7 @@ Node *primary() {
     Token *tok = consume_ident();
     if (tok) { // 変数名 or 関数名がきたとき
         Node *node = new_node(ND_LVAR);
-        LVar *lvar = find_lvar(tok); // 変数名が見つかったらそのアドレスを返す
+        // LVar *lvar = calloc(1, sizeof(LVar));
         // FUNCと判断するため
         // consume("(") が true だったら node->kind = ND_FUNC_CALL; else ND_LVAR
 
@@ -358,7 +366,9 @@ Node *primary() {
                 }
                 expect(")");
             }
+            return node;
         }
+        LVar *lvar = find_lvar(tok); // 変数名が見つかったらそのアドレスを返す
 
         // 変数
         if (lvar) {

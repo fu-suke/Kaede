@@ -85,7 +85,7 @@ fi
 # assert "foo = 100 ;bar = 10; return foo - bar;" 90
 # assert "returnx = 5;return returnx;" 5
 
-assert "main(){if (1==2) return 1; else return 2;}" 2
+assert "ITF(){if (1==2) return 1; else return 2;}" 2
 # assert "if (1==1) return 1; " 1
 # assert "x=0;while (x<10) x=x+1; return x;" 10
 
@@ -113,4 +113,12 @@ assert "main(){if (1==2) return 1; else return 2;}" 2
 # assert "i=0;while(i<5){sum(2,i); i=i+1;} i;" 5
 # assert "i=0;while(i<5){i=i+1;} i;" 5
 # assert "i=0;if(i==0){while(i<5){i=i+1;}} i;" 5
+
+assert "return3(){return 3;}
+        ITF(){return3();}" 3
+assert "return3(){return 3;}
+        ITF(){return3() + 2;}" 5
+assert "ITF(){a=1;b=2; return a+b;}" 3
+# assert "func(){a=1;b=2; return a+b;}
+#         ITF(){func();}" 3
 echo OK

@@ -9,19 +9,19 @@ char *arg_reg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 void pop(char *reg){
     printf("  pop %s\n", reg);
     stack_depth--;
-    printf("# depth:%d\n", stack_depth);
+    // printf("# depth:%d\n", stack_depth);
 }
 
 void push(char *reg){
     printf("  push %s\n", reg);
     stack_depth++;
-    printf("# depth:%d\n", stack_depth);
+    // printf("# depth:%d\n", stack_depth);
 }
 
 void push_num(int num){
     printf("  push %d\n", num);
     stack_depth++;
-    printf("# depth:%d\n", stack_depth);
+    // printf("# depth:%d\n", stack_depth);
 }
 
 void gen_lval(Node *node) {
@@ -31,6 +31,29 @@ void gen_lval(Node *node) {
     printf("  mov rax, rbp\n");
     printf("  sub rax, %d\n", node->offset);
     push("rax");
+}
+
+void gen_prologue(Node *node){
+    // 関数の名前のラベルをつける
+    if (!memcmp(node->func_name, "ITF", 3)){
+        printf("main:\n");
+    }
+    else{
+        printf("%s:\n", node->func_name);
+    }
+    // プロローグ
+    printf(" # プロローグ\n");
+    push("rbp");
+    printf("  mov rbp, rsp\n");
+    int locals_len = 0;
+    LVar *current = node->locals;
+    while (current != NULL){
+        locals_len++;
+        current = current->next;
+    }
+    // 変数個分の領域を確保する
+    int mem = locals_len * 8;
+    printf("  sub rsp, %d\n", mem);
 }
 
 void gen_stmt(Node *node){
@@ -80,6 +103,25 @@ void gen_stmt(Node *node){
         }
         return;
     }
+    
+    case ND_FUNC_DEF:
+    {
+        // スタックフレームを作る
+        gen_prologue(node);
+        // 関数の処理を書く
+        Node *current = node->body;
+        while (current != NULL) {
+            gen_stmt(current);
+            current = current->next;
+        }
+        // エピローグ
+        printf(" # エピローグ\n");
+        // 最後の式の結果がRAXに残っているのでそれが返り値になる
+        printf("  mov rsp, rbp\n");
+        pop("rbp");
+        printf("  ret\n");
+        return;
+        }
     default:
         gen(node);
         pop("rax");
@@ -91,7 +133,7 @@ void gen_stmt(Node *node){
 void gen(Node *node) {
 
     switch (node->kind) {
-    case ND_FUNC_CALL:
+    case ND_FUNC_CALL: {
         // 引数を評価したものをスタックに積む
 
         int args_count = 0; // 引数の数を数える
@@ -116,23 +158,27 @@ void gen(Node *node) {
         }
         push("rax");
         return;
-    case ND_RETURN:
+    }
+    case ND_RETURN: {
         gen(node->lhs);
         pop("rax");
         printf("  mov rsp, rbp\n");
         pop("rbp");
         printf("  ret\n");
         return;
-    case ND_NUM:
+    }
+    case ND_NUM: {
         push_num(node->val);
         return;
-    case ND_LVAR:
+    }
+    case ND_LVAR: {
         gen_lval(node);
         pop("rax");
         printf("  mov rax, [rax]\n");
         push("rax");
         return;
-    case ND_ASSIGN:
+    }
+    case ND_ASSIGN: {
         gen_lval(node->lhs);
         gen(node->rhs);
 
@@ -140,8 +186,8 @@ void gen(Node *node) {
         pop("rax");
         printf("  mov [rax], rdi\n");
         push("rdi");
-        return;
-    
+        return;   
+    }
     }
 
     gen(node->lhs);
@@ -151,39 +197,47 @@ void gen(Node *node) {
     pop("rax");
 
     switch (node->kind) {
-    case ND_ADD:
+    case ND_ADD: {
         printf("  add rax, rdi\n");
         break;
-    case ND_SUB:
+    }
+    case ND_SUB: {
         printf("  sub rax, rdi\n");
         break;
-    case ND_MUL:
+    }
+    case ND_MUL: {
         printf("  imul rax, rdi\n");
         break;
-    case ND_DIV:
+    }
+    case ND_DIV: {
         printf("  cqo\n");
         printf("  idiv rdi\n");
         break;
-    case ND_EQ: // ==
+    }
+    case ND_EQ: { // ==
         printf("  cmp rax, rdi\n");
         printf("  sete al\n");
         printf("  movzb rax, al\n");
         break;
-    case ND_NE: // !=
+    }
+    case ND_NE: { // !=
         printf("  cmp rax, rdi\n");
         printf("  setne al\n");
         printf("  movzb rax, al\n");
         break;
-    case ND_LT: // <
+    }
+    case ND_LT: { // <
         printf("  cmp rax, rdi\n");
         printf("  setl al\n");
         printf("  movzb rax, al\n");
         break;
-    case ND_LE: // <=
+    }
+    case ND_LE: { // <=
         printf("  cmp rax, rdi\n");
         printf("  setle al\n");
         printf("  movzb rax, al\n");
         break;
+    }
     }
 
     push("rax");

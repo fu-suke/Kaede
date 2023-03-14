@@ -52,6 +52,7 @@ fi
 
 if [ "$test_kind" = "parse" ]; then
   echo "parse test"
+  make > /dev/null
   make unit_test > /dev/null 
 fi
 
@@ -118,7 +119,20 @@ assert "return3(){return 3;}
         ITF(){return3();}" 3
 assert "return3(){return 3;}
         ITF(){return3() + 2;}" 5
-assert "ITF(){a=1;b=2; return a+b;}" 3
-# assert "func(){a=1;b=2; return a+b;}
-#         ITF(){func();}" 3
+assert "func(){a=1;b=2; return a+b;}
+        ITF(){func();}" 3
+assert "func(){return 10;}
+        ITF(){
+          x = 0;
+          for(i=0; i<10; i=i+1){
+            x = x + func();
+          }
+        return x;}" 100
+assert "func(){return 9;}
+        ITF(){
+          if(func() == 9){
+            return 1;}
+          else{
+            return 2;}
+        }" 1
 echo OK

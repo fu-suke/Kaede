@@ -125,14 +125,13 @@ void program() {
     int i = 0;
     while (!at_eof()) {
         // code[i++] = stmt();
-        printf("kani\n");
         code[i++] = function_def();
     }
     code[i] = NULL;
 }
 
-Node* function_def(){
-    locals = NULL;
+Node *function_def() {
+    locals = calloc(1, sizeof(LVar));
     Node *node = new_node(ND_FUNC_DEF);
     Token *tok = consume_ident();
     // 関数名の取得
@@ -144,14 +143,12 @@ Node* function_def(){
     // 引数の処理
     expect(")");
     expect("{");
- 
+
     while (!consume("}", TK_RESERVED)) {
-        add_node_to_block(node, stmt()); 
+        add_node_to_block(node, stmt());
     }
     node->locals = locals;
     return node;
-        
-    
 }
 // stmt = expr ';'
 // | "return" expr ";"
@@ -237,8 +234,9 @@ Node *stmt() {
         node = expr();
     }
 
-    if (!consume(";", TK_RESERVED)){
-        error_at(token->str, 0, "';'ではないトークンです");}
+    if (!consume(";", TK_RESERVED)) {
+        error_at(token->str, 0, "';'ではないトークンです");
+    }
     return node;
 }
 
@@ -323,8 +321,6 @@ Node *unary() {
     return primary();
 }
 
-
-
 LVar *find_lvar(Token *tok) {
     for (LVar *var = locals; var; var = var->next)
         if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
@@ -349,9 +345,9 @@ Node *primary() {
         // FUNCと判断するため
         // consume("(") が true だったら node->kind = ND_FUNC_CALL; else ND_LVAR
 
+        // 関数名を退避
         char *name = calloc(1, (tok->len + 1) * sizeof(char));
         strncpy(name, tok->str, tok->len);
-        // 関数名を退避
         name[tok->len] = '\0';
 
         // 関数呼び出し
@@ -366,6 +362,7 @@ Node *primary() {
                 }
                 expect(")");
             }
+
             return node;
         }
         LVar *lvar = find_lvar(tok); // 変数名が見つかったらそのアドレスを返す
@@ -379,6 +376,7 @@ Node *primary() {
             lvar->name = tok->str;
             lvar->len = tok->len;
             lvar->offset = locals->offset + 8;
+            // printf("hoge\n");
             node->offset = lvar->offset;
             locals = lvar;
         }

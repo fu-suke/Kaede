@@ -243,11 +243,28 @@ Node *stmt() {
 // expr = assign
 Node *expr() { return assign(); }
 
-// equality ("=" assign)?
+// assign = 
+// | equality ("=" assign)?
+// | equality ("+=" mul)?
+// | equality ("-=" mul)? 
+// | equality ("*=" unary)?
+// | equality ("/=" unary)?
 Node *assign() {
     Node *node = equality();
     if (consume("=", TK_RESERVED))
         node = new_binary(ND_ASSIGN, node, assign());
+    if (consume("+=", TK_RESERVED))
+        node = new_binary(ND_ASSIGN, node, new_binary(ND_ADD, node, mul()));
+    if (consume("-=", TK_RESERVED))
+        node = new_binary(ND_ASSIGN, node, new_binary(ND_SUB, node, mul()));
+    if (consume("*=", TK_RESERVED))
+        node = new_binary(ND_ASSIGN, node, new_binary(ND_MUL, node, unary()));
+    if (consume("/=", TK_RESERVED))
+        node = new_binary(ND_ASSIGN, node, new_binary(ND_DIV, node, unary()));
+    if (consume("++", TK_RESERVED))
+        node = new_binary(ND_ASSIGN, node, new_binary(ND_ADD, node, new_num(1)));
+    if (consume("--", TK_RESERVED))
+        node = new_binary(ND_ASSIGN, node, new_binary(ND_SUB, node, new_num(1)));
     return node;
 }
 

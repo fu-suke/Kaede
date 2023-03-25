@@ -135,4 +135,49 @@ assert "func(){return 9;}
           else{
             return 2;}
         }" 1
+
+assert "ITF() {
+  x = 1;
+  x += 2;
+  return x;
+  }" 3
+
+assert "ITF() {
+  x = 3;
+  x -= 2;
+  return x;
+  }" 1
+
+assert "ITF() {
+  x = 2;
+  x *= 2;
+  return x;
+  }" 4
+
+assert "ITF() {
+  x = 5;
+  x /= 2;
+  return x;
+}" 2
+
+assert "ITF() {
+  x = 99;
+  x++;
+  return x;
+}" 100
+
+assert "ITF() {
+  x = 50;
+  for(y=0;y<10;y++) {
+    x--;
+  }
+  return x;
+}" 40
+
+assert "ITF() {
+  x=0;
+  y=x++;
+  return y;
+}" 1
+
 echo OK

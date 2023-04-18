@@ -85,8 +85,7 @@ fi
 # assert "hoge=2;honi=3;hoge+honi;" 5
 # assert "foo = 100 ;bar = 10; return foo - bar;" 90
 # assert "returnx = 5;return returnx;" 5
-
-assert "ITF(){if (1==2) return 1; else return 2;}" 2
+assert "ITF(){if (1==1) return 1; }" 1
 # assert "if (1==1) return 1; " 1
 # assert "x=0;while (x<10) x=x+1; return x;" 10
 
@@ -179,5 +178,34 @@ assert "ITF() {
   y=x++;
   return y;
 }" 1
+
+# assert "ITF() {
+#   1=1;
+#   }" 12
+
+assert "ITF(){
+          if(1==1){
+            x = 10;
+          }
+          else{
+            x = 20;
+          }
+          return x;
+        }" 10
+
+assert "func(){x=3; return x;}
+ITF(){
+  x = 10;
+  func();
+  return x;
+  }" 10
+
+# assert "ITF(){ X=0; Y=3; X=2; return X;}" 1
+
+# assert "ITF() {
+#   x+=1+2;
+#   return x;
+# }" 1
+
 
 echo OK

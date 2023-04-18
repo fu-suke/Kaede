@@ -95,9 +95,13 @@ struct LVar {
     char *name; // 変数の名前
     int len;    // 名前の長さ
     int offset; // RBPからのオフセット
+    bool is_const;
+    bool is_filled;
 };
 
 extern LVar *locals;
+
+bool is_const(char *str, int len);
 
 // Code generator
 void gen_stmt(Node *node);
@@ -107,3 +111,5 @@ extern Node *code[];
 void program();
 void push(char *reg);
 void pop(char *reg);
+
+LVar *find_lvar(Token *tok, Node *node);

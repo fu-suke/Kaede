@@ -1,13 +1,14 @@
-CFLAGS=-std=c11 -g -fno-common
-SRCS=tokenize.c parse.c codegen.c main.c func_def.c
-OBJS=$(SRCS:.c=.o)
+CFLAGS:=-std=c11 -g -fno-common
+SRCS:=tokenize.c $(wildcard parser/*.c) codegen.c main.c func_def.c error.c
+
+OBJS:=$(SRCS:.c=.o)
 
 kaede: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OBJS): kaede.h
+$(OBJS): kaede.h parser/parse.h
 
-unit_test: unit_test.o tokenize.o parse.o 
+unit_test: unit_test.o tokenize.o parser/*.o error.o
 
 test: kaede
 	./test.sh
